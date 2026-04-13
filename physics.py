@@ -2,7 +2,7 @@
 import math
 
 # ── Gravity & Movement ───────────────────────────────────
-GRAVITY = 0.4
+GRAVITY = 0.024
 
 def apply_gravity(velocity_y):
     return velocity_y + GRAVITY

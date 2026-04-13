@@ -69,3 +69,59 @@ class SurvivalMode:
 
     def get_status(self):
         return f"Score: {self.score}    Time: {self.time_left}s"
+
+# ════════════════════════════════════════════════════════
+# EDU MODE — learning math questions
+# ════════════════════════════════════════════════════════
+class EduMode:
+    def __init__(self):
+        self.score = 0
+        self.lives = 3
+        self.correct_count = 0
+        self.wrong_count = 0
+        self.questions_answered = 0
+        self.difficulty = "easy"
+        self.game_over = False
+
+    def on_correct_slice(self):
+        self.score += 10
+        self.correct_count += 1
+        self.questions_answered += 1
+        if self.correct_count > 0 and self.correct_count % 5 == 0:
+            self.level_up()
+
+    def on_wrong_slice(self):
+        self.score -= 5
+        self.wrong_count += 1
+        self.lives -= 1
+        if self.lives <= 0:
+            self.lives = 0
+            self.game_over = True
+
+    def on_missed(self):
+        self.lives -= 1
+        if self.lives <= 0:
+            self.lives = 0
+            self.game_over = True
+
+    def level_up(self):
+        if self.difficulty == "easy":
+            self.difficulty = "medium"
+        elif self.difficulty == "medium":
+            self.difficulty = "hard"
+
+    def get_status(self):
+        return f"Score: {self.score}    Level: {self.difficulty.capitalize()}"
+
+    def get_performance_report(self):
+        accuracy = 0
+        total = self.correct_count + self.wrong_count
+        if total > 0:
+            accuracy = int((self.correct_count / total) * 100)
+        return {
+            "score": self.score,
+            "correct": self.correct_count,
+            "wrong": self.wrong_count,
+            "accuracy": accuracy,
+            "questions_answered": self.questions_answered
+        }

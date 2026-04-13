@@ -269,3 +269,115 @@ class SplashEffect(pygame.sprite.Sprite):
         self.timer -= 1
         if self.timer <= 0:
             self.kill()
+
+# ════════════════════════════════════════════════════════
+# ANSWER FRUIT — correct math answer
+# ════════════════════════════════════════════════════════
+class AnswerFruit(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height, number):
+        super().__init__()
+        self.screen_w = width
+        self.screen_h = height
+        self.number = number
+
+        types = ["apple", "banana", "coconut", "orange", "pineapple", "watermelon"]
+        self.fruit_type = random.choice(types)
+        try:
+            path = f"assets/fruits/{self.fruit_type}_small.png"
+            if not os.path.exists(path):
+                path = f"assets/fruits/{self.fruit_type}.png"
+            raw = pygame.image.load(path).convert_alpha()
+            self.image = pygame.transform.scale(raw, (120, 120))
+        except:
+            self.image = pygame.Surface((120, 120), pygame.SRCALPHA)
+            pygame.draw.circle(self.image, ORANGE, (60, 60), 60)
+
+        # Draw dark circle behind text for clarity
+        bg = pygame.Surface((50, 50), pygame.SRCALPHA)
+        pygame.draw.circle(bg, (0, 0, 0, 180), (25, 25), 25)
+        border_rect = bg.get_rect(center=(60, 60))
+        self.image.blit(bg, border_rect)
+        
+        font = pygame.font.SysFont("Arial", 40, bold=True)
+        text = font.render(str(number), True, WHITE)
+        text_rect = text.get_rect(center=(60, 60))
+        self.image.blit(text, text_rect)
+
+        self.rect = self.image.get_rect(center=(x, y))
+        self.pos_x = float(x)
+        self.pos_y = float(y)
+
+        self.vel_x = random.uniform(-0.1, 0.1)
+        self.vel_y = random.uniform(-4.8, -4.4)
+
+    def update(self):
+        self.pos_x, self.pos_y, self.vel_x, self.vel_y = physics.apply_physics(
+            self.pos_x, self.pos_y, self.vel_x, self.vel_y
+        )
+        self.rect.center = (int(self.pos_x), int(self.pos_y))
+
+    def check_slice(self, segments):
+        cx, cy = self.rect.centerx, self.rect.centery
+        radius = self.rect.width // 2
+        for (x1, y1), (x2, y2) in segments:
+            if physics.check_capsule_circle_collision(
+                (x1, y1), (x2, y2), thickness=10, center=(cx, cy), radius=radius
+            ):
+                return True
+        return False
+
+# ════════════════════════════════════════════════════════
+# ANSWER BOMB — incorrect math answer
+# ════════════════════════════════════════════════════════
+class AnswerBomb(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height, number):
+        super().__init__()
+        self.screen_w = width
+        self.screen_h = height
+        self.number = number
+
+        types = ["apple", "banana", "coconut", "orange", "pineapple", "watermelon"]
+        self.fruit_type = random.choice(types)
+        try:
+            path = f"assets/fruits/{self.fruit_type}_small.png"
+            if not os.path.exists(path):
+                path = f"assets/fruits/{self.fruit_type}.png"
+            raw = pygame.image.load(path).convert_alpha()
+            self.image = pygame.transform.scale(raw, (120, 120))
+        except:
+            self.image = pygame.Surface((120, 120), pygame.SRCALPHA)
+            pygame.draw.circle(self.image, ORANGE, (60, 60), 60)
+
+        # Draw dark circle behind text for clarity
+        bg = pygame.Surface((50, 50), pygame.SRCALPHA)
+        pygame.draw.circle(bg, (0, 0, 0, 180), (25, 25), 25)
+        border_rect = bg.get_rect(center=(60, 60))
+        self.image.blit(bg, border_rect)
+        
+        font = pygame.font.SysFont("Arial", 40, bold=True)
+        text = font.render(str(number), True, WHITE)
+        text_rect = text.get_rect(center=(60, 60))
+        self.image.blit(text, text_rect)
+
+        self.rect = self.image.get_rect(center=(x, y))
+        self.pos_x = float(x)
+        self.pos_y = float(y)
+
+        self.vel_x = random.uniform(-0.1, 0.1)
+        self.vel_y = random.uniform(-4.8, -4.4)
+
+    def update(self):
+        self.pos_x, self.pos_y, self.vel_x, self.vel_y = physics.apply_physics(
+            self.pos_x, self.pos_y, self.vel_x, self.vel_y
+        )
+        self.rect.center = (int(self.pos_x), int(self.pos_y))
+
+    def check_slice(self, segments):
+        cx, cy = self.rect.centerx, self.rect.centery
+        radius = self.rect.width // 2
+        for (x1, y1), (x2, y2) in segments:
+            if physics.check_capsule_circle_collision(
+                (x1, y1), (x2, y2), thickness=10, center=(cx, cy), radius=radius
+            ):
+                return True
+        return False
