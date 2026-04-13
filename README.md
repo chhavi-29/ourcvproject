@@ -26,17 +26,17 @@ Built specifically for children, this game combines physical movement with mathe
    cd FruitNinja-cv
 
 
- ##Install the dependencies: Make sure you have Python installed, then run the following command to download the required libraries:
+ ## Install the dependencies: Make sure you have Python installed, then run the following command to download the required libraries:
 
 bash
 pip install pygame opencv-contrib-python mediapipe==0.10.14 numpy
 (Note: mediapipe==0.10.14 is recommended specifically for Apple Silicon Mac compatibility!)
 
-##Run the game:
+## Run the game:
 
 bash
 python3 main.py
-##📂 Project Structure
+## 📂 Project Structure
 
 main.py - The core application entry point and game state machine.
 
@@ -52,7 +52,7 @@ question_generator.py - Generates dynamic math equations based on the current di
 
 assets/ - Contains background images, sound effects, and UI sprites.
 
-##👥 Meet the Team
+ ## 👥 Meet the Team
 
 Developed collaboratively to make education physically active and fun!
 
