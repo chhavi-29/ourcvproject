@@ -52,12 +52,6 @@ def main():
     try:
         bg_raw = pygame.image.load("assets/background/game_background.jpg").convert()
         bg_img = pygame.transform.scale(bg_raw, (WIDTH, HEIGHT))
-        # Dimming & Blurring for gameplay
-        bg_img = blur_surf(bg_img, 4)
-        dark = pygame.Surface((WIDTH, HEIGHT))
-        dark.set_alpha(100)
-        dark.fill(BLACK)
-        bg_img.blit(dark, (0, 0))
     except Exception as e:
         print("Bg not loaded:", e)
         bg_img = pygame.Surface((WIDTH, HEIGHT))
@@ -122,11 +116,12 @@ def main():
 
         # ── State Machine ─────────────────────────────────
         if state == "SPLASH":
-            ui_manager.draw_splash_screen(screen)
+            ui_manager.draw_splash_screen(screen, mx, my)
             blade.draw(screen)
             
             # Check interaction
-            if mouse_clicked or (sliced_ui and ui_manager.start_btn_rect.collidepoint(mx, my)):
+            # Click mode only for UI logic to prevent accidental slicing
+            if mouse_clicked and ui_manager.start_btn_rect.collidepoint(mx, my):
                 state = "WAITING"
                 current_question, correct_answer, wrong_answers = question_gen.generate(game_mode.difficulty)
                 
@@ -239,13 +234,22 @@ def main():
         elif state == "GAME_OVER":
             spawn_timer += 1
             screen.blit(bg_img, (shake_x, shake_y))
+            ui_manager.draw_game_over(screen, game_mode.get_performance_report(), highest_score, mx, my)
             blade.draw(screen)
-            ui_manager.draw_game_over(screen, game_mode.get_performance_report(), highest_score)
             
             # Restart Check (cooldown of roughly 1.5 seconds to prevent accidental restart)
             if spawn_timer > 90:
-                if mouse_clicked or (sliced_ui and ui_manager.restart_btn_rect.collidepoint(mx, my)):
+                if mouse_clicked and ui_manager.restart_btn_rect.collidepoint(mx, my):
                     # Reset
+                    game_mode = EduMode()
+                    last_difficulty = game_mode.difficulty
+                    all_sprites.empty()
+                    answers.empty()
+                    shake_timer = 0
+                    current_question, correct_answer, wrong_answers = question_gen.generate(game_mode.difficulty)
+                    state = "WAITING"
+                elif mouse_clicked and ui_manager.home_btn_rect.collidepoint(mx, my):
+                    # Go to Home
                     game_mode = EduMode()
                     last_difficulty = game_mode.difficulty
                     all_sprites.empty()

@@ -8,24 +8,34 @@ class UIManager:
         
         # Colors (Pastel theme from balloon arch)
         self.COLOR_PINK = (255, 182, 193)
+        self.COLOR_PINK_HOVER = (255, 105, 180)
         self.COLOR_BLUE = (173, 216, 230)
         self.COLOR_YELLOW = (255, 255, 153)
+        self.COLOR_YELLOW_HOVER = (255, 255, 51)
         self.COLOR_WHITE = (255, 255, 255)
         self.COLOR_BLACK = (0, 0, 0)
         self.COLOR_RED = (255, 99, 71)
+
+        # Load Start Background
+        try:
+            raw_bg = pygame.image.load("assets/background/startpage.jpg").convert()
+            self.start_bg = pygame.transform.scale(raw_bg, (self.width, self.height))
+        except Exception as e:
+            print("Start bg not loaded:", e)
+            self.start_bg = None
         
         # Load Fonts
         try:
             # Tries to get Comic Sans or falls back to SysFont
-            self.font_title = pygame.font.SysFont("Comic Sans MS", 72, bold=True)
+            self.font_title = pygame.font.SysFont("Comic Sans MS", 86, bold=True)
             self.font_btn = pygame.font.SysFont("Comic Sans MS", 48, bold=True)
-            self.font_instructions = pygame.font.SysFont("Comic Sans MS", 28)
+            self.font_instructions = pygame.font.SysFont("Comic Sans MS", 28, bold=True)
             
             # Keep numbers in a clean sans-serif like Arial
             self.font_hud = pygame.font.SysFont("Arial", 36, bold=True)
             self.font_question = pygame.font.SysFont("Arial", 44, bold=True)
         except Exception:
-            self.font_title = pygame.font.Font(None, 72)
+            self.font_title = pygame.font.Font(None, 86)
             self.font_btn = pygame.font.Font(None, 48)
             self.font_instructions = pygame.font.Font(None, 28)
             self.font_hud = pygame.font.Font(None, 36)
@@ -33,12 +43,14 @@ class UIManager:
             
         # Create Heart Surface for Lives and Score
         self.heart_surface = self._create_heart_surface(40, self.COLOR_PINK)
+        self.heart_empty_surface = self._create_heart_surface(40, (150, 150, 150)) # Grey heart for lost lives
         self.heart_score_surface = self._create_heart_surface(30, self.COLOR_PINK)
         
         # State variables
         self.level_up_timer = 0
         self.start_btn_rect = pygame.Rect(self.width//2 - 125, self.height//2 + 50, 250, 80)
-        self.restart_btn_rect = pygame.Rect(self.width//2 - 150, self.height//2 + 150, 300, 80)
+        self.restart_btn_rect = pygame.Rect(self.width//2 - 150, self.height//2 + 90, 300, 70)
+        self.home_btn_rect = pygame.Rect(self.width//2 - 150, self.height//2 + 180, 300, 70)
 
     def _create_heart_surface(self, size, color):
         surface = pygame.Surface((size, size), pygame.SRCALPHA)
@@ -61,28 +73,41 @@ class UIManager:
         
         return surface
 
-    def draw_splash_screen(self, screen):
+    def draw_splash_screen(self, screen, mx, my):
         # Draw background base
-        screen.fill(self.COLOR_BLUE)
+        if hasattr(self, 'start_bg') and self.start_bg:
+            screen.blit(self.start_bg, (0, 0))
+        else:
+            screen.fill(self.COLOR_BLUE)
         
-        # Title "Tiny Thinkers"
+        # Title "Tiny Thinkers" with heavy outline for max visibility
         title_text = self.font_title.render("Tiny Thinkers", True, self.COLOR_YELLOW)
-        # Shadow
         shadow = self.font_title.render("Tiny Thinkers", True, self.COLOR_BLACK)
-        screen.blit(shadow, (self.width//2 - title_text.get_width()//2 + 4, 84))
-        screen.blit(title_text, (self.width//2 - title_text.get_width()//2, 80))
+        # Draw outline
+        offsets = [(-4,-4), (-4,4), (4,-4), (4,4), (-4,0), (4,0), (0,-4), (0,4)]
+        bx, by = self.width//2 - title_text.get_width()//2, 80
+        for dx, dy in offsets:
+            screen.blit(shadow, (bx + dx, by + dy))
+        # Draw text
+        screen.blit(title_text, (bx, by))
         
-        # Start Button
-        pygame.draw.rect(screen, self.COLOR_PINK, self.start_btn_rect, border_radius=15)
+        # Start Button with hover interaction
+        btn_color = self.COLOR_PINK_HOVER if self.start_btn_rect.collidepoint(mx, my) else self.COLOR_PINK
+        pygame.draw.rect(screen, btn_color, self.start_btn_rect, border_radius=15)
         pygame.draw.rect(screen, self.COLOR_WHITE, self.start_btn_rect, width=4, border_radius=15)
         
         btn_text = self.font_btn.render("START", True, self.COLOR_WHITE)
         screen.blit(btn_text, (self.start_btn_rect.centerx - btn_text.get_width()//2, self.start_btn_rect.centery - btn_text.get_height()//2))
         
         # Instructions
-        inst_text = self.font_instructions.render("Note: Use ONLY ONE HAND to slice the answers!", True, self.COLOR_WHITE)
+        inst_text = self.font_instructions.render("Note: Use ONLY ONE HAND to slice the answers!", True, self.COLOR_BLACK)
         bg_rect = inst_text.get_rect(center=(self.width//2, self.height - 50))
-        pygame.draw.rect(screen, self.COLOR_BLACK, bg_rect.inflate(20, 10))
+        
+        # Pastel badge style
+        badge_rect = bg_rect.inflate(30, 20)
+        pygame.draw.rect(screen, self.COLOR_YELLOW, badge_rect, border_radius=15)
+        pygame.draw.rect(screen, self.COLOR_WHITE, badge_rect, width=4, border_radius=15)
+        
         screen.blit(inst_text, bg_rect)
 
     def draw_hud(self, screen, score, lives, max_lives, current_question):
@@ -94,8 +119,8 @@ class UIManager:
         # Top Right: Lives (Row of Hearts)
         start_x = self.width - 20 - self.heart_surface.get_width()
         for i in range(max_lives):
-            if i < lives:
-                screen.blit(self.heart_surface, (start_x - (i * (self.heart_surface.get_width() + 10)), 15))
+            heart = self.heart_surface if i < lives else self.heart_empty_surface
+            screen.blit(heart, (start_x - (i * (self.heart_surface.get_width() + 10)), 15))
                 
         # Top Center: Question
         if current_question:
@@ -133,7 +158,7 @@ class UIManager:
         
         screen.blit(alpha_surface, (self.width//2 - text.get_width()//2, self.height//2 - text.get_height()//2 - 100))
 
-    def draw_game_over(self, screen, performance, highest_score):
+    def draw_game_over(self, screen, performance, highest_score, mx, my):
         # Dimming overlay
         overlay = pygame.Surface((self.width, self.height))
         overlay.set_alpha(200)
@@ -142,17 +167,17 @@ class UIManager:
         
         # "GAME OVER"
         over_txt = self.font_title.render("GAME OVER", True, self.COLOR_RED)
-        screen.blit(over_txt, (self.width//2 - over_txt.get_width()//2, 100))
+        screen.blit(over_txt, (self.width//2 - over_txt.get_width()//2, 60))
         
         # Stats Background Box
-        box_w, box_h = 450, 250
-        box_rect = pygame.Rect(self.width//2 - box_w//2, 200, box_w, box_h)
+        box_w, box_h = 450, 220
+        box_rect = pygame.Rect(self.width//2 - box_w//2, 160, box_w, box_h)
         pygame.draw.rect(screen, self.COLOR_BLUE, box_rect, border_radius=20)
         pygame.draw.rect(screen, self.COLOR_WHITE, box_rect, width=5, border_radius=20)
         
         # Stats Text
         stat_color = self.COLOR_BLACK
-        y_offset = 220
+        y_offset = 180
         high_score_txt = self.font_hud.render(f"Highest Score: {highest_score}", True, stat_color)
         score_txt = self.font_hud.render(f"Score: {performance['score']}", True, stat_color)
         accuracy_txt = self.font_instructions.render(f"Accuracy: {performance['accuracy']}%", True, stat_color)
@@ -160,12 +185,19 @@ class UIManager:
         
         screen.blit(high_score_txt, (self.width//2 - high_score_txt.get_width()//2, y_offset))
         screen.blit(score_txt, (self.width//2 - score_txt.get_width()//2, y_offset + 50))
-        screen.blit(accuracy_txt, (self.width//2 - accuracy_txt.get_width()//2, y_offset + 120))
-        screen.blit(correct_txt, (self.width//2 - correct_txt.get_width()//2, y_offset + 170))
+        screen.blit(accuracy_txt, (self.width//2 - accuracy_txt.get_width()//2, y_offset + 110))
+        screen.blit(correct_txt, (self.width//2 - correct_txt.get_width()//2, y_offset + 160))
         
-        # Restart Button
-        pygame.draw.rect(screen, self.COLOR_YELLOW, self.restart_btn_rect, border_radius=15)
+        # Restart Button hover
+        res_color = self.COLOR_YELLOW_HOVER if self.restart_btn_rect.collidepoint(mx, my) else self.COLOR_YELLOW
+        pygame.draw.rect(screen, res_color, self.restart_btn_rect, border_radius=15)
         pygame.draw.rect(screen, self.COLOR_WHITE, self.restart_btn_rect, width=4, border_radius=15)
-        
         r_text = self.font_btn.render("Restart Game", True, self.COLOR_BLACK)
         screen.blit(r_text, (self.restart_btn_rect.centerx - r_text.get_width()//2, self.restart_btn_rect.centery - r_text.get_height()//2))
+
+        # Home Button hover
+        hom_color = self.COLOR_PINK_HOVER if self.home_btn_rect.collidepoint(mx, my) else self.COLOR_PINK
+        pygame.draw.rect(screen, hom_color, self.home_btn_rect, border_radius=15)
+        pygame.draw.rect(screen, self.COLOR_WHITE, self.home_btn_rect, width=4, border_radius=15)
+        h_text = self.font_btn.render("Main Menu", True, self.COLOR_BLACK)
+        screen.blit(h_text, (self.home_btn_rect.centerx - h_text.get_width()//2, self.home_btn_rect.centery - h_text.get_height()//2))
