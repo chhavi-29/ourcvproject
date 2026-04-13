@@ -24,3 +24,31 @@ Built specifically for children, this game combines physical movement with mathe
    ```bash
    git clone <>
    cd FruitNinja-cv
+
+
+ ##Install the dependencies: Make sure you have Python installed, then run the following command to download the required libraries:
+
+bash
+pip install pygame opencv-contrib-python mediapipe==0.10.14 numpy
+(Note: mediapipe==0.10.14 is recommended specifically for Apple Silicon Mac compatibility!)
+
+#Run the game:
+
+bash
+python3 main.py
+##📂 Project Structure
+main.py - The core application entry point and game state machine.
+game_engine.py - Handles the underlying scoring logic, lives, and educational difficulty scaling.
+game_objects.py - Manages the physics and interactions for the dropping fruits, bombs, and splice animations.
+hand_tracker.py & input_manager.py - Interfaces with the webcam and mediapipe to track player movements.
+ui_manager.py - Handles the rendering of the HUD, Start Screen, and Game Over dashboard.
+question_generator.py - Generates dynamic math equations based on the current difficulty level.
+assets/ - Contains background images, sound effects, and UI sprites.
+##👥 Meet the Team
+
+Developed collaboratively to make education physically active and fun!
+
+Member 1: Core Game Engine, Physics, and Logic Flow
+Member 2: Computer Vision, Hand Tracking, and Input Management
+Member 3: Audio, User Interface, and Graphical Polishing
+
