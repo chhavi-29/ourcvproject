@@ -5,11 +5,16 @@
 import pygame
 import sys
 import random
+import cv2
+import numpy as np
 
 # Import our own modules
 from game_objects import (Blade, AnswerFruit, AnswerBomb, SlicedFruit, Explosion, SplashEffect)
 from game_engine import EduMode
 from question_generator import QuestionGenerator
+from input_manager import InputManager
+
+input_manager = InputManager()
 
 # ── Config ───────────────────────────────────────────────
 WIDTH, HEIGHT    = 800, 600
@@ -24,6 +29,7 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Fruit Ninja CV")
+    pygame.mouse.set_visible(False)  # Hide the system cursor
     clock  = pygame.time.Clock()
 
     # ── Load Background (temporary — Member 3 will replace this) ──
@@ -92,11 +98,13 @@ def main():
                     last_mx, last_my = pygame.mouse.get_pos()
 
         # ── Input (mouse for now, Member 2 replaces this) ─
-        mx, my   = pygame.mouse.get_pos()
-        dx, dy   = mx - last_mx, my - last_my
-        distance = (dx ** 2 + dy ** 2) ** 0.5
-        velocity = (distance / max(1, dt)) * 1000  # pixels per sec
-        last_mx, last_my = mx, my
+        input_data = input_manager.get_input()
+        if input_data["active"]:
+            mx, my   = input_data["x"], input_data["y"]
+            velocity = input_data["velocity"]
+        else:
+            mx, my   = pygame.mouse.get_pos()  # fallback to mouse if no hand detected
+            velocity = 200
 
         # ── Update (only if game is still running) ────────
         if not game_mode.game_over:
@@ -197,6 +205,19 @@ def main():
         hint = font_small.render("[ ESC to quit ]", True, (150, 150, 150))
         screen.blit(hint, (WIDTH - hint.get_width() - 20, 20))
 
+        # CV Debug Overlay
+        cam_status = "Cam OK" if input_data["frame"] is not None else "Cam ERROR"
+        hand_status = "Hand ACTIVE" if input_data["active"] else "No Hand"
+        debug_txt = font_small.render(f"{cam_status} | {hand_status}", True, (255, 255, 0))
+        screen.blit(debug_txt, (20, 60))
+
+        if input_data["frame"] is not None:
+            # Display small webcam preview in corner
+            preview = cv2.resize(input_data["frame"], (160, 120))
+            preview_rgb = cv2.cvtColor(preview, cv2.COLOR_BGR2RGB)
+            preview_surface = pygame.surfarray.make_surface(np.swapaxes(preview_rgb, 0, 1))
+            screen.blit(preview_surface, (WIDTH - 180, HEIGHT - 140))
+            
         for i in range(game_mode.lives):
             pygame.draw.circle(screen, (255, 0, 0), (WIDTH-50-i*40, 30), 10)
 
@@ -221,6 +242,7 @@ def main():
 
         pygame.display.flip()
 
+    input_manager.stop()
     pygame.quit()
     sys.exit()
 
